@@ -154,7 +154,7 @@ def discrete_vals(data):
     matrix = pd.DataFrame(1, index=ordered, columns=ordered)
 
     for sample1, sample2 in itertools.combinations(data.index, 2):
-        val = data[sample1] == data[sample2]
+        val = 1 if data[sample1] == data[sample2] else 0
         matrix[sample1][sample2] = val
         matrix[sample2][sample1] = val
 
@@ -193,7 +193,7 @@ def continuous_vals(data, threshold):
     #
     matrix = pd.DataFrame(0, index=ordered, columns=ordered)
     for sample1, sample2 in combos:
-        val = int(dist[sample1][sample2] < max_val)
+        val = 1 if int(dist[sample1][sample2] < max_val) else 0
         matrix[sample1][sample2] = val
         matrix[sample2][sample1] = val
 
@@ -209,7 +209,7 @@ def lat_lon_vals(data, max_dist):
     for sample1, sample2 in itertools.combinations(data.index, 2):
         pos1 = re.split(r'\s*,\s*', data[sample1])
         pos2 = re.split(r'\s*,\s*', data[sample2])
-        val = int(vincenty(pos1, pos2).kilometers < max_dist)
+        val = 1 if int(vincenty(pos1, pos2).kilometers < max_dist) else 0
         matrix[sample1][sample2] = val
         matrix[sample2][sample1] = val
 

@@ -22,7 +22,7 @@ option_list = list(
   ),
   make_option(
     c("-o", "--outdir"),
-    default = getwd(),
+    default = file.path(getwd(), 'gbme-out'),
     type = "character",
     help = "outdir",
     metavar = "character"
@@ -71,12 +71,14 @@ if (nchar(matrix_file) == 0) {
     stop("Must have -f matrix file")
 }
 
+printf("Reading matrix \"%s\"\n", matrix_file)
 Y = as.matrix(read.table(matrix_file, header = TRUE))
 
 if (!dir.exists(out_dir)) {
   printf("Creating outdir '%s'\n", out_dir)
   dir.create(out_dir)
 }
+out_dir = normalizePath(out_dir)
 
 if (nchar(matrix_file) == 0) {
   stop("Missing matrix file argument")
@@ -93,17 +95,17 @@ if (file.exists(gbme.out)) {
 # Look for the "*.meta" files 
 meta_dir = file.path(out_dir, "meta")
 
+n = nrow(Y)
 Xss = NULL
+k = 0
 if (dir.exists(meta_dir)) {
   meta_files = list.files(path = meta_dir, pattern = "*.meta$")
-  print(meta_files)
   k = length(meta_files)
 
   printf("Found %s file%s in meta dir '%s'\n", k, 
     if (k == 1) { '' } else {'s'}, meta_dir)
 
   if (k > 0) {
-    n = length(readLines(file.path(meta_dir, meta_files[1]))) - 1
     Xss = array(NA, dim = c(n,n,k))
 
     for (i in 1:k) {
@@ -113,15 +115,19 @@ if (dir.exists(meta_dir)) {
   }
 }
 
-printf("Reading %s matrix\n", matrix_file)
-Y = as.matrix(read.table(matrix_file, header = TRUE))
+if (!is.null(Xss)) {
+  if (nrow(Y) != nrow(Xss)) {
+    print("The number of rows don't match b/w the data and metadata, ignoring.")
+    Xss = NULL
+  }
+}
 
 printf("Running GBME with %s scans\n", n_iter)
 
 if (is.null(Xss)) {
-  gbme(Y = Y, fam = "gaussian", k = 2, direct = F, NS = n_iter, odens = 10, ofilename = gbme.out)
+  gbme(Y = Y, fam = "gaussian", k = k, direct = F, NS = n_iter, odens = 10, ofilename = gbme.out)
 } else {
-  gbme(Y = Y, Xss, fam = "gaussian", k = 2, direct = F, NS = n_iter, odens = 10, ofilename = gbme.out)
+  gbme(Y = Y, Xss, fam = "gaussian", k = k, direct = F, NS = n_iter, odens = 10, ofilename = gbme.out)
 }
 
 if (!file.exists(gbme.out)) {
