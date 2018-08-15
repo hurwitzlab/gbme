@@ -75,8 +75,13 @@ if (!dir.exists(out.dir)) {
   printf("Creating outdir '%s'\n", out.dir)
   dir.create(out.dir)
 }
+out.dir = normalizePath(out.dir)
+setwd(out.dir)
 
 GBME_OUT = file.path(out.dir, "gbme.out")
+if (file.exists(GBME_OUT)) {
+  file.remove("Failed to run GBME!")
+}
 
 # Look for the "*.meta" files 
 meta_dir = file.path(out.dir, "meta")
@@ -114,9 +119,14 @@ Z_path = file.path(out.dir, "Z")
 if (is.null(Xss)) {
   gbme(Y = Y, fam = "gaussian", k = 2, direct = F, NS = n_iter, odens = 10, ofilename = GBME_OUT, zfilename = Z_path)
 } else {
-  gbme(Y = Y, Xss, fam = "gaussian", k = 2, direct = F, NS = n_iter, odens = 10, ofilename = GBME_OUT, zfilename = Z_path)
+  tryCatch(gbme(Y = Y, Xss, fam = "gaussian", k = 2, direct = F, NS = n_iter, odens = 10, ofilename = GBME_OUT, zfilename = Z_path),
+           error = function(c) {
+               stop("Error running GBME with metadata -- TRY WITHOUT!")
+           }
+           )
 }
 
+printf("looking for %s", GBME_OUT)
 if (!file.exists(GBME_OUT)) {
   stop("Failed to run GBME!")
 }

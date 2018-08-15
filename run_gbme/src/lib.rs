@@ -29,7 +29,7 @@ pub struct Config {
 }
 
 // --------------------------------------------------
-pub fn run(config: Config) -> MyResult<String> {
+pub fn run(config: Config) -> MyResult<()> {
     println!("Using input matrix \"{}\"", &config.matrix);
 
     let out_dir = &config.out_dir;
@@ -89,43 +89,28 @@ pub fn run(config: Config) -> MyResult<String> {
         };
     }
 
-    let run_gbme = "run_gbme.r";
-    let run_gbme_path = match &config.bin_dir {
-        Some(d) => Path::new(&d).join(run_gbme),
-        _ => PathBuf::from(run_gbme),
+    let sna = "sna.r";
+    let sna_path = match &config.bin_dir {
+        Some(d) => Path::new(&d).join(sna),
+        _ => PathBuf::from(sna),
     };
 
-    let process = Command::new(&run_gbme_path)
+    let status = Command::new(&sna_path)
         .arg("-f")
         .arg(&matrix)
         .arg("-o")
         .arg(&out_dir)
         .arg("-n")
         .arg(&config.num_scans.to_string())
-        .output();
+        .status()
+        .unwrap();
 
-    if let Err(e) = process {
-        let msg = format!(
-            "Failed to run \"{}\": {}",
-            run_gbme_path.to_string_lossy(),
-            e.to_string()
-        );
-        return Err(From::from(msg));
-    }
-
-    match process {
-        Err(e) => {
-            let msg = format!(
-                "Failed to run \"{}\": {}",
-                run_gbme_path.to_string_lossy(),
-                e.to_string()
-            );
-            return Err(From::from(msg));
-        }
-        Ok(output) => println!("{:?}", String::from_utf8_lossy(&output.stdout)),
+    return if status.success() {
+        Ok(())
+    } else {
+        let msg = format!("Failed to run \"{}\"", sna_path.to_string_lossy());
+        Err(From::from(msg))
     };
-
-    Ok(config.out_dir.to_string_lossy().to_string())
 }
 
 // --------------------------------------------------
