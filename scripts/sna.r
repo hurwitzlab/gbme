@@ -80,7 +80,7 @@ setwd(out.dir)
 
 GBME_OUT = file.path(out.dir, "gbme.out")
 if (file.exists(GBME_OUT)) {
-  file.remove("Failed to run GBME!")
+  file.remove(GBME_OUT)
 }
 
 # Look for the "*.meta" files 
