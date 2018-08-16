@@ -23,7 +23,6 @@ pub struct Config {
     bin_dir: Option<String>,
     distance: u32,
     euc_dist_percent: f64,
-    num_threads: u32,
     num_scans: u32,
     out_dir: PathBuf,
 }
@@ -166,14 +165,6 @@ pub fn get_args() -> MyResult<Config> {
                 .help("Number of GBME scans"),
         )
         .arg(
-            Arg::with_name("num_threads")
-                .short("t")
-                .long("threads")
-                .value_name("INT")
-                .default_value("12")
-                .help("Number of threads"),
-        )
-        .arg(
             Arg::with_name("bin_dir")
                 .short("b")
                 .long("bin_dir")
@@ -208,14 +199,6 @@ pub fn get_args() -> MyResult<Config> {
         _ => 0,
     };
 
-    let num_threads: u32 = match matches.value_of("num_threads") {
-        Some(x) => match x.trim().parse() {
-            Ok(n) if n > 0 && n < 64 => n,
-            _ => 0,
-        },
-        _ => 0,
-    };
-
     let num_scans: u32 = match matches.value_of("num_scans") {
         Some(x) => match x.trim().parse() {
             Ok(n) => n,
@@ -242,7 +225,6 @@ pub fn get_args() -> MyResult<Config> {
         bin_dir: bin_dir,
         distance: distance,
         euc_dist_percent: euc_dist_percent,
-        num_threads: num_threads,
         num_scans: num_scans,
         out_dir: out_dir,
         metadata: metadata,
